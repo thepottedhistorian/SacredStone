@@ -10,6 +10,7 @@ This repository serves as the official archival space for the web and automation
 
 ## 📁 PROJECT DIRECTORY
 *   **[/BaronialSocialTools](./BaronialSocialTools/):** The primary automation suite governing event digests, email communications, and Discord broadcasting.
+*   **[/Quartermaster Inventory Portal and Asset Hub](./Quartermaster%20Inventory%20Portal%20and%20Asset%20Hub/):** Houses the Google Apps Script backend (`Code.gs`), frontend portal interface (`Index.html`), and project documentation (`README.gs`, `CHANGELOG.gs`) for the Baronial inventory and asset request system.
 *   *Planned Additions:* Future directories will be added here as new web projects (such as regional event sites or other scripting projects) are digitized and archived.
 
 ## 📜 STEWARDSHIP GUIDELINES
