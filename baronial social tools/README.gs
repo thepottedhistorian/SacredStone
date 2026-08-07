@@ -1,4 +1,3 @@
-/*
 # 🛡️ BARONIAL SOCIAL TOOLS
 ### *Project Manifest & Technical Folio*
 
@@ -59,4 +58,3 @@
 2.  **REFRESH:** Click `🛡️ Baronial Social Tools` > `Admin Sync` > `Fetch Online Data`.
 3.  **DIGEST:** Click `📅 This Week Digest`; review and "Send to Group."
 4.  **DISCORD:** Click `🚀 Post THIS WEEK to Discord`; review and "Fire to Discord."
-*/
