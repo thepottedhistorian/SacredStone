@@ -1,11 +1,17 @@
 /**
  * ==============================================================================
- * PROJECT:     Barony of the Sacred Stone — Quartermaster Portal Backend
+ * PROJECT:     Barony of the Sacred Stone — Master Inventory Aggregator
  * MODULE:      Backend Controller (`Code.gs`)
- * PURPOSE:     Maps schema, logs checkouts, and handles routing via Script Properties.
+ * PURPOSE:     Dynamically aggregates category sheets into "Master Inventory" 
+ *              to maintain accurate data sourcing for the Quartermaster portal.
  * ==============================================================================
  */
 
+/**
+ * Retrieves the spreadsheet ID from Script Properties.
+ * @return {string} The active spreadsheet ID.
+ * @private
+ */
 function getSpreadsheetId_() {
   const scriptProps = PropertiesService.getScriptProperties();
   const id = scriptProps.getProperty("SPREADSHEET_ID");
@@ -15,137 +21,121 @@ function getSpreadsheetId_() {
   return id;
 }
 
-function doGet(e) {
-  try {
-    return HtmlService.createHtmlOutputFromFile('Index')
-      .setTitle('Barony of the Sacred Stone — Portal')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-  } catch (err) {
-    return HtmlService.createHtmlOutput("<h3>Server Error:</h3><p>" + err.toString() + "</p>");
-  }
-}
+/**
+ * ==============================================================================
+ * SECTION: AGGREGATION & SYNCHRONIZATION ENGINE
+ * ==============================================================================
+ */
 
-function getInventoryData() {
+/**
+ * Compiles items from all designated category sheets into the Master Inventory sheet.
+ */
+function updateMasterInventory() {
   try {
     const ss = SpreadsheetApp.openById(getSpreadsheetId_());
-    const targetSheet = ss.getSheetByName("Master Inventory");
+    const masterSheetName = "Master Inventory";
+    let masterSheet = ss.getSheetByName(masterSheetName);
     
-    if (!targetSheet) {
-      throw new Error("Master Inventory sheet not found. Please run your aggregator script first.");
+    // Create Master Inventory sheet if it doesn't already exist
+    if (!masterSheet) {
+      masterSheet = ss.insertSheet(masterSheetName);
     }
     
-    let data = targetSheet.getDataRange().getValues();
-    if (data.length < 2) return [];
-
-    const rows = data.slice(1);
-
-    return rows.map((row, rIdx) => {
-      let itemId = row[0] ? String(row[0]) : "ITEM-" + (rIdx + 1);
-      let itemName = row[1] ? String(row[1]) : "";
-      if (!itemName) return null; // Skip empty rows
-
-      return {
-        itemId: itemId,
-        itemName: itemName,
-        category: row[2] ? String(row[2]) : "General",
-        subCategory: row[3] ? String(row[3]) : "",
-        classification: row[4] ? String(row[4]) : "",
-        status: row[5] ? String(row[5]) : "Storage",
-        totalQty: row[6] !== "" && !isNaN(row[6]) ? Number(row[6]) : 1,
-        signedOutQty: row[7] !== "" && !isNaN(row[7]) ? Number(row[7]) : 0,
-        accountedFor: row[8] ? String(row[8]) : "",
-        condition: row[9] ? String(row[9]) : "Good",
-        storageLocation: row[10] ? String(row[10]) : "Unassigned Storage",
-        signOutDate: row[11] ? String(row[11]) : "",
-        signedOutTo: row[12] ? String(row[12]) : "",
-        expectedReturn: row[13] ? String(row[13]) : "",
-        photoUrl: row[14] ? String(row[14]) : "",
-        photoUrl2: row[15] ? String(row[15]) : "",
-        notes: row[16] ? String(row[16]) : ""
-      };
-    }).filter(item => item !== null);
-
+    // List of category sheets corresponding to the workbook tabs
+    const categorySheets = [
+      "Regalia", 
+      "A&S Supplies", 
+      "Decor", 
+      "Marshal Items", 
+      "Tents", 
+      "Camp Gear", 
+      "Food Items", 
+      "Misc Equip", 
+      "WOW", 
+      "CooksGuild"
+    ];
+    
+    let headers = [];
+    let allData = [];
+    
+    // Loop through each category sheet to aggregate data safely
+    categorySheets.forEach((sheetName) => {
+      const sheet = ss.getSheetByName(sheetName);
+      if (sheet) {
+        const lastRow = sheet.getLastRow();
+        const lastCol = sheet.getLastColumn();
+        
+        if (lastRow > 1 && lastCol > 0) {
+          // Capture headers from the first valid sheet encountered
+          if (headers.length === 0) {
+            headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+            headers.push("Category"); // Append source tracker column matching portal schema
+          }
+          
+          // Extract data rows excluding the header row
+          const dataRows = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+          
+          // Append the source sheet name to each row for tracking and web app categorization
+          dataRows.forEach(row => {
+            row.push(sheetName);
+            allData.push(row);
+          });
+        }
+      }
+    });
+    
+    // Clear previous master content before repopulating
+    masterSheet.clear();
+    
+    if (headers.length > 0) {
+      // Write headers to the Master Inventory sheet with portal styling standards
+      masterSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      
+      // Write compiled item rows if data exists
+      if (allData.length > 0) {
+        masterSheet.getRange(2, 1, allData.length, headers.length).setValues(allData);
+      }
+      
+      // Apply archival table styling and freeze the header row
+      masterSheet.getRange(1, 1, 1, headers.length)
+        .setFontWeight("bold")
+        .setBackground("#1b3b22")
+        .setFontColor("#FFFFFF");
+      masterSheet.setFrozenRows(1);
+    }
+    
+    Logger.log("Master Inventory successfully updated from category sheets.");
   } catch (err) {
-    Logger.log("CRITICAL ERROR in getInventoryData: " + err.toString());
+    Logger.log("CRITICAL ERROR in updateMasterInventory: " + err.toString());
     throw new Error(err.toString());
   }
 }
 
-function submitCheckoutRequest(requestData) {
+/**
+ * ==============================================================================
+ * SECTION: AUTOMATION INSTALLER
+ * ==============================================================================
+ */
+
+/**
+ * Installs an automated onEdit trigger so the master sheet updates 
+ * dynamically whenever changes are made across category sheets.
+ */
+function setupAutomationTrigger() {
   try {
-    const ss = SpreadsheetApp.openById(getSpreadsheetId_());
-    let logSheet = ss.getSheetByName('Checkout Log');
+    // Clear existing triggers to prevent duplicates
+    const triggers = ScriptApp.getProjectTriggers();
+    triggers.forEach(trigger => ScriptApp.deleteTrigger(trigger));
     
-    if (!logSheet) {
-      logSheet = ss.insertSheet('Checkout Log');
-      logSheet.appendRow([
-        "Timestamp", "Event Steward / SCA Name", "Modern Name", "Email", 
-        "Phone", "Event & Location", "Event Date", "Item ID", 
-        "Read Baronial Policies", "Read Financial Policies", "Status"
-      ]);
-      logSheet.getRange(1, 1, 1, 11).setFontWeight("bold").setBackground("#1b3b22").setFontColor("#FFFFFF");
-      logSheet.setFrozenRows(1);
-    }
-
-    const timestamp = new Date();
-
-    logSheet.appendRow([
-      timestamp,
-      requestData.scaName,
-      requestData.legalName,
-      requestData.email,
-      requestData.phone,
-      requestData.event,
-      requestData.eventDate,
-      requestData.itemId,
-      requestData.readBaronialPolicies ? "Yes" : "No",
-      requestData.readFinancialPolicies ? "Yes" : "No",
-      "Pending Approval"
-    ]);
-
-    // Fetch secure recipients and IDs dynamically from Script Properties
-    const scriptProps = PropertiesService.getScriptProperties();
-    const quartermasterEmail = scriptProps.getProperty("QUARTERMASTER_EMAIL");
-    const webministerEmail = scriptProps.getProperty("WEBMINISTER_EMAIL");
-    const exchequerEmail = scriptProps.getProperty("EXCHEQUER_EMAIL");
-
-    // Send routed email notification
-    try {
-      if (quartermasterEmail) {
-        const emailSubject = `[Asset Request] Item ${requestData.itemId} — ${requestData.event}`;
-        const emailBody = `A new Baronial asset checkout request has been submitted through the portal.\n\n` +
-          `--- REQUEST DETAILS ---\n` +
-          `• Item ID Requested: ${requestData.itemId}\n` +
-          `• Event Steward / SCA Name: ${requestData.scaName}\n` +
-          `• Modern Name: ${requestData.legalName}\n` +
-          `• Email: ${requestData.email}\n` +
-          `• Phone: ${requestData.phone}\n` +
-          `• Event / Location: ${requestData.event}\n` +
-          `• Event Date: ${requestData.eventDate}\n` +
-          `• Read Baronial Policies: ${requestData.readBaronialPolicies ? "Yes" : "No"}\n` +
-          `• Read Financial Policies: ${requestData.readFinancialPolicies ? "Yes" : "No"}\n` +
-          `• Submission Time: ${timestamp}\n\n` +
-          `This request has been logged as "Pending Approval" in the Master Inventory Checkout Log sheet.`;
-
-        let ccList = [];
-        if (webministerEmail) ccList.push(webministerEmail);
-        if (exchequerEmail) ccList.push(exchequerEmail);
-
-        MailApp.sendEmail({
-          to: quartermasterEmail,
-          cc: ccList.join(","),
-          subject: emailSubject,
-          body: emailBody,
-          replyTo: requestData.email
-        });
-      }
-    } catch (emailErr) {
-      Logger.log("Warning: Failed to dispatch email notification: " + emailErr.toString());
-    }
-
-    return { success: true, message: "Checkout request successfully logged and routed to the Quartermaster (Exchequer & Webminister CC'd)." };
+    // Create a new edit trigger tied to the target spreadsheet
+    ScriptApp.newTrigger('updateMasterInventory')
+      .forSpreadsheet(SpreadsheetApp.openById(getSpreadsheetId_()))
+      .onEdit()
+      .create();
+      
+    Logger.log("Automation trigger successfully configured for MasterInventorySync.");
   } catch (err) {
-    throw new Error("Failed to submit request: " + err.message);
+    Logger.log("CRITICAL ERROR in setupAutomationTrigger: " + err.toString());
+    throw new Error(err.toString());
   }
 }
