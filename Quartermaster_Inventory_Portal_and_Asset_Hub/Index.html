@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barony of the Sacred Stone — Quartermaster Portal</title>
+  <style>
+    :root {
+      --baronial-green: #1b3b22;
+      --baronial-dark: #122617;
+      --nav-slate: #28302c;
+      --parchment-bg: #f5f2eb;
+      --card-bg: #ffffff;
+      --text-main: #2b2b2b;
+      --text-muted: #6b7268;
+      --border-color: #d1d5db;
+      --accent-gold: #c5a880;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--parchment-bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+
+    header {
+      background-color: var(--baronial-dark);
+      background-image: linear-gradient(rgba(18, 38, 23, 0.85), rgba(27, 59, 34, 0.9)), url('https://www.sacredstone.atlantia.sca.org/wp-content/uploads/2020/06/cropped-cropped-SacredStoneHeader2.jpg');
+      background-size: cover;
+      background-position: center;
+      color: white;
+      padding: 2.5rem 2rem 1.5rem 2rem;
+      text-align: center;
+      border-bottom: 4px solid var(--accent-gold);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: 1px;
+      font-family: Georgia, serif;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    }
+
+    header p {
+      margin: 0.5rem 0 0 0;
+      color: #e2e8f0;
+      font-size: 1rem;
+      font-style: italic;
+    }
+
+    .nav-strip {
+      background-color: var(--nav-slate);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #1a211e;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .nav-strip span {
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .nav-strip span:hover {
+      color: var(--accent-gold);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .controls-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    @media(min-width: 768px) {
+      .controls-bar {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    .search-input {
+      width: 100%;
+      max-width: 350px;
+      padding: 0.65rem 1rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--baronial-green);
+      box-shadow: 0 0 0 3px rgba(27, 59, 34, 0.15);
+    }
+
+    .filter-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    @media(min-width: 1024px) {
+      .filter-groups {
+        flex-direction: row;
+        align-items: center;
+      }
+    }
+
+    .filter-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .badge {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      padding: 0.35rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .badge:hover, .badge.active {
+      background-color: var(--baronial-green);
+      color: white;
+      border-color: var(--baronial-green);
+    }
+
+    .badge-status {
+      border-color: var(--baronial-green);
+      background-color: #f0f4f1;
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 4px solid var(--baronial-green);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .item-id {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--text-muted);
+      background-color: #edf2f7;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .status-pill {
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .status-storage { background-color: #c6f6d5; color: #22543d; }
+    .status-out { background-color: #feebc8; color: #744210; }
+    .status-missing { background-color: #fed7d7; color: #742a2a; }
+
+    .color-swatch {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      vertical-align: -0.15em;
+      border-radius: 3px;
+      margin-right: 0.35rem;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+    .swatch-storage { background-color: #c6f6d5; }
+    .swatch-nonunit { background-color: #9ae6b4; }
+    .swatch-out { background-color: #feebc8; }
+    .swatch-missing { background-color: #fed7d7; }
+    .swatch-pink { background-color: #f687b3; }
+
+    .card h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem;
+      color: var(--baronial-dark);
+      font-family: Georgia, serif;
+    }
+
+    .card-images {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    .card-image-thumb {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background-color: #f7fafc;
+    }
+
+    .card-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .card-meta div {
+      margin-bottom: 0.2rem;
+    }
+
+    .btn {
+      background-color: var(--baronial-green);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+      width: 100%;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover { background-color: var(--baronial-dark); }
+    .btn:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
+
+    .loading { text-align: center; padding: 3rem; font-size: 1.1rem; color: var(--text-muted); }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    .modal {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 850px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border-top: 5px solid var(--baronial-green);
+      box-sizing: border-box;
+    }
+
+    .modal h2 { margin-top: 0; color: var(--baronial-dark); font-family: Georgia, serif; }
+    
+    .modal-gallery {
+      display: flex;
+      gap: 1.5rem;
+      margin: 1.25rem 0;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .modal-image-large {
+      width: 45%;
+      min-width: 250px;
+      max-height: 350px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: #f7fafc;
+    }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.3rem; }
+    .form-group input { width: 100%; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; }
+    
+    .liability-box {
+      background: #fdfbf7;
+      border: 1px solid var(--accent-gold);
+      padding: 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: normal;
+      cursor: pointer;
+    }
+    .checkbox-group input { width: auto; margin-top: 0.2rem; cursor: pointer; }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+    .btn-secondary { background-color: #e2e8f0; color: var(--text-main); }
+    .btn-secondary:hover { background-color: #cbd5e0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Barony of the Sacred Stone</h1>
+    <p>Quartermaster Inventory Portal &amp; Asset Request Hub</p>
+  </header>
+
+  <div class="nav-strip">
+    <span onclick="openInfoModal()">Storage Location &amp; Terms</span>
+    <span onclick="openGlossaryModal()">Status &amp; Condition Glossary</span>
+    <span onclick="openChangelogModal()">Changelog / Release Notes</span>
+    <span onclick="window.open('https://sacredstone.atlantia.sca.org/baronial-asset-request-form/', '_blank')">📥 Bulk Request Form</span>
+  </div>
+
+  <div class="container">
+    <!-- Controls & Filters Bar -->
+    <div class="controls-bar">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search items, categories, locations..." onkeyup="filterItems()">
+      
+      <div class="filter-groups">
+        <div class="filter-badges" id="statusFilters">
+          <button class="badge badge-status active" onclick="filterByStatus('All', this)">All Statuses</button>
+          <button class="badge badge-status" onclick="filterByStatus('In Storage', this)">In Storage / Available</button>
+          <button class="badge badge-status" onclick="filterByStatus('Signed Out', this)">Signed Out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Badges Bar -->
+    <div class="controls-bar" style="padding: 0.75rem 1rem;">
+      <div class="filter-badges" id="categoryFilters">
+        <button class="badge active" onclick="filterByCategory('All', this)">All Categories</button>
+      </div>
+    </div>
+
+    <div id="inventoryContainer" class="loading">Loading baronial inventory records...</div>
+  </div>
+
+<!-- Storage Location & Terms Modal -->
+  <div id="infoModal" class="modal-overlay" onclick="closeInfoModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>Baronial Asset Request Form &amp; Storage Terms</h2>
+      
+      <div style="margin-bottom: 1.25rem; background: #f7fafc; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color);">
+        <h3 style="margin-top:0; color:var(--baronial-dark); font-family:Georgia, serif;">Storage Location:</h3>
+        <p style="margin:0; font-weight:500;">Olympic Crown Storage<br>915 Bendix Drive, Salisbury NC 28146</p>
+      </div>
+      
+      <div style="font-size: 0.9rem; color: var(--text-main); line-height: 1.6; margin-bottom: 1.25rem;">
+        <p style="margin-top: 0;">
+          To request Baronial Assets for your event or function, please fill out the bulk PDF form. Once complete, download the PDF to your device and email the form to 
+          <a href="mailto:quartermaster@sacredstone.atlantia.sca.org">quartermaster@sacredstone.atlantia.sca.org</a> and 
+          <a href="mailto:exchequer@sacredstone.atlantia.sca.org">exchequer@sacredstone.atlantia.sca.org</a>.
+        </p>
+        <p>
+          Arrangements will be made to pick up the items at Baronial storage. The Quartermaster and Exchequer will print the form for the requester to physically sign at check-out and take pictures. The signed form will be scanned with the images attached and saved for reference, and a copy of both will be emailed to the requester.
+        </p>
+        <p>
+          After the event is over, the requester arranges with the Quartermaster or Exchequer to return the items to Baronial storage no later than 14 days after the event. The Quartermaster and Exchequer will note on the form when the items were returned, take pictures, scan the updated form, attach the after-pictures, and send a copy to the requester.
+        </p>
+      </div>
+
+      <h3 style="color: var(--baronial-dark); font-family: Georgia, serif; margin-top: 1.5rem;">Terms &amp; Conditions</h3>
+      <ol style="font-size: 0.9rem; line-height: 1.6; color: var(--text-main); padding-left: 1.2rem;">
+        <li>Items borrowed are the responsibility of the individual named above. It is the sponsoring branch's responsibility to repair or replace any items which are broken, lost or stolen.</li>
+        <li>Borrower will arrange a time to access the storage unit with a key holder, no later than ten days prior to when the items are needed and at the key holder's convenience. <em>(Don't ask for access to pick up items on the morning of an event.)</em></li>
+        <li>Borrower will arrange a time to return items to the storage unit with a key holder. Borrowed items will be returned to the storage unit no later than 14 days after the end of the event for which they were borrowed. Items will not be 'handed off' to another person for use at another event. *</li>
+      </ol>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeInfoModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Status & Condition Glossary Modal -->
+  <div id="glossaryModal" class="modal-overlay" onclick="closeGlossaryModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>Status &amp; Condition Definitions</h2>
+      
+      <h3 style="color:var(--baronial-dark); font-family:Georgia, serif;">Status Definitions</h3>
+      <ul style="font-size: 0.9rem; line-height: 1.6; padding-left: 1.2rem; list-style-type: none;">
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-storage"></span><strong style="color: #22543d;">Storage (Deep Green):</strong> In Unit — Stored properly in primary storage.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-nonunit"></span><strong style="color: #22543d;">Non-Unit (Light Green):</strong> Cannot be stored in unit, but not presently signed out.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-nonunit"></span><strong style="color: #22543d;">Elkin Site (Light Green):</strong> Stored at the Ekin site, but not specifically signed out.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-out"></span><strong style="color: #744210;">Signed Out (Yellow):</strong> Signed out — for event or for an officer term.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-missing"></span><strong style="color: #742a2a;">Missing (Bright Red):</strong> Missing — Location unknown.</li>
+      </ul>
+
+      <h3 style="color:var(--baronial-dark); font-family:Georgia, serif; margin-top: 1.5rem;">Condition Definitions</h3>
+      <ul style="font-size: 0.9rem; line-height: 1.6; padding-left: 1.2rem; list-style-type: none;">
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-storage"></span><strong style="color: #22543d;">Excellent (Deep Green):</strong> Pristine condition.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-nonunit"></span><strong style="color: #22543d;">Good (Light Green):</strong> Minor wear, fully functional.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-out"></span><strong style="color: #744210;">Worn / Unfinished (Yellow):</strong> Shows age or incomplete/unfinished but still usable.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-pink"></span><strong style="color: #b83280;">Flawed (Bright Pink):</strong> Damaged, incomplete or unfinished; may become unusable.</li>
+        <li style="margin-bottom: 0.4rem;"><span class="color-swatch swatch-missing"></span><strong style="color: #742a2a;">Unusable (Bright Red):</strong> Damaged, broken or incomplete; cannot be used until fixed.</li>
+      </ul>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeGlossaryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Changelog & Release Notes Modal -->
+  <div id="changelogModal" class="modal-overlay" onclick="closeChangelogModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div>
+          <h2 style="margin-bottom: 0.2rem;">Changelog &amp; Release Notes</h2>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+            Created &amp; Maintained by <strong>Ailis inghean Uí Riagáin</strong> (Baronial Webminister)<br>
+            <em>Last Updated: August 2026</em>
+          </p>
+        </div>
+        <button type="button" class="btn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="toggleChangelogView()" id="changelogToggleBtn">
+          ⇄ Switch to Technical Log
+        </button>
+      </div>
+
+      <!-- Inventory & Asset Management Log (Default View) -->
+      <div id="inventoryLogView" style="background: #fdfbf7; border-left: 4px solid var(--accent-gold); padding: 1rem; border-radius: 0 6px 6px 0; margin-bottom: 1rem;">
+        <h3 style="margin-top:0; color:var(--baronial-dark); font-family:Georgia, serif;">🛡️ Inventory &amp; Asset Management Log</h3>
+        <ul style="font-size: 0.88rem; line-height: 1.6; padding-left: 1.2rem; margin-bottom: 0;">
+          <li><strong>August 2026 — Liability &amp; Policy Integration:</strong> Added mandatory Baronial and Financial Policy acknowledgment checkboxes and event stewardship contact requirements directly into the checkout workflow.</li>
+          <li><strong>August 2026 — Bulk Request Integration:</strong> Linked standalone PDF request forms and streamlined storage pickup/return instructions for event stewards.</li>
+          <li><strong>July/August 2026 — Storage Headquarters Defined:</strong> Cataloged primary asset holding location at Olympic Crown Storage (915 Bendix Drive, Salisbury, NC).</li>
+          <li><strong>Regalia &amp; Equipment Classifications:</strong> Cataloged specialized brackets including Baronage, Champion, Officer, Marshals, Tents, and Feastware.</li>
+          <li><strong>Status Audit Sync:</strong> Synchronized color-coded statuses (Storage, Non-Unit, Elkin Site, Signed Out, Missing) and condition glossary chips with live item inventory records.</li>
+        </ul>
+      </div>
+
+      <!-- App & Workbook Technical Log (Toggled View) -->
+      <div id="technicalLogView" style="display: none; background: #f7fafc; border-left: 4px solid var(--baronial-green); padding: 1rem; border-radius: 0 6px 6px 0; margin-bottom: 1rem;">
+        <h3 style="margin-top:0; color:var(--baronial-dark); font-family:Georgia, serif;">⚡ App &amp; Workbook Technical Log</h3>
+        <ul style="font-size: 0.88rem; line-height: 1.6; padding-left: 1.2rem; margin-bottom: 0;">
+          <li><strong>August 2026 — Secure Email Routing:</strong> Configured automated notification dispatch for checkout requests routing directly to the Quartermaster with the Exchequer and Webminister CC'd via secure Script Properties.</li>
+          <li><strong>August 2026 — Script Sanitization:</strong> Migrated Spreadsheet IDs and recipient email strings out of the codebase and into Apps Script Script Properties.</li>
+          <li><strong>18-Column Schema Flattening:</strong> Standardized Master Inventory mapping for high-performance retrieval across `Code.gs` and UI binders.</li>
+          <li><strong>Google Drive Image Integration:</strong> Configured `lh3.googleusercontent.com` thumbnail translation to bypass browser cross-origin frame blocks.</li>
+          <li><strong>Automated Checkout Logging:</strong> Integrated backend logger targeting the `Checkout Log` tab with timestamping and approval states.</li>
+        </ul>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeChangelogModal()">Close</button>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Item Details & Preview Modal -->
+  <div id="detailsModal" class="modal-overlay" onclick="closeDetailsModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="card-header">
+        <span id="detailItemId" class="item-id"></span>
+        <span id="detailStatus" class="status-pill"></span>
+      </div>
+      <h2 id="detailItemName" style="margin-bottom: 0.5rem;"></h2>
+      
+      <div id="detailGallery" class="modal-gallery"></div>
+
+      <div class="card-meta" style="font-size: 0.95rem; line-height: 1.6;">
+        <div><strong>Category:</strong> <span id="detailCategory"></span></div>
+        <div><strong>Sub-Category:</strong> <span id="detailSubCategory"></span></div>
+        <div><strong>Classification:</strong> <span id="detailClassification"></span></div>
+        <div><strong>Location:</strong> <span id="detailLocation"></span></div>
+        <div><strong>Quantity:</strong> <span id="detailQuantity"></span></div>
+        <div><strong>Condition:</strong> <span id="detailCondition"></span></div>
+        <div><strong>Accounted For:</strong> <span id="detailAccounted"></span></div>
+        
+        <div id="detailSignOutContainer" style="display:none; margin-top:0.75rem; background:#fffaf0; border:1px solid #feebc8; padding:0.75rem; border-radius:6px; color:#744210;">
+          <div><strong>Signed Out To:</strong> <span id="detailSignedOutTo"></span></div>
+          <div><strong>Date &amp; Time:</strong> <span id="detailSignOutDate"></span></div>
+          <div><strong>Expected Return date:</strong> <span id="detailExpectedReturn"></span></div>
+        </div>
+
+        <div style="margin-top: 0.75rem;">
+          <strong>Notes / Item Details:</strong>
+          <p id="detailNotes" style="background: #f7fafc; padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); margin-top: 0.25rem; color: var(--text-main);"></p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeDetailsModal()">Close</button>
+        <button type="button" id="detailCheckoutBtn" class="btn" onclick="triggerCheckoutFromDetails()">Request Item Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Request Modal -->
+  <div id="requestModal" class="modal-overlay">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2 id="modalTitle">Request Asset Checkout</h2>
+      <form id="checkoutForm" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="modalItemId">
+        
+        <div class="form-group">
+          <label>Event Steward (Autocrat) / SCA Name</label>
+          <input type="text" id="scaName" required placeholder="e.g., Ailis inghean Ui Riagain">
+        </div>
+
+        <div class="form-group">
+          <label>Modern Name (Legal Name)</label>
+          <input type="text" id="legalName" required placeholder="Full Legal Name">
+        </div>
+
+        <div class="form-group">
+          <label>Event / Location</label>
+          <input type="text" id="event" required placeholder="e.g., Baronial Birthday, Site Location">
+        </div>
+
+        <div class="form-group">
+          <label>Date of Event</label>
+          <input type="date" id="eventDate" required>
+        </div>
+
+        <div class="form-group">
+          <label>Telephone</label>
+          <input type="tel" id="phone" required placeholder="(555) 555-5555">
+        </div>
+
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" required placeholder="name@domain.com">
+        </div>
+
+        <!-- Financial Liability Acknowledgement Section -->
+        <div class="liability-box">
+          <strong style="display:block; margin-bottom: 0.3rem; color: var(--baronial-dark);">Financial Liability Acknowledgement:</strong>
+          <p style="margin: 0 0 0.5rem 0;">
+            By submitting below, you agree that you are taking physical custody of the requested Baronial assets and acknowledge that you take full financial responsibility for all items. You agree to return all items to Baronial storage no later than 14 calendar days after the event's last day on site, clean and in the same condition as received, and that if damaged or lost (except consumables), you may be responsible for repair or replacement in accordance with Kingdom and Baronial Financial Policies.
+          </p>
+
+          <label class="checkbox-group">
+            <input type="checkbox" id="readBaronialPolicies" required>
+            <span>I have read the current Baronial Policies.</span>
+          </label>
+
+          <label class="checkbox-group">
+            <input type="checkbox" id="readFinancialPolicies" required>
+            <span>I have read the current Baronial Financial Policies.</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn" id="submitBtn">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let allInventoryData = [];
+    let currentCategory = 'All';
+    let currentStatusFilter = 'All';
+    let activeSelectedItem = null;
+
+    window.onload = function() {
+      try {
+        google.script.run
+          .withSuccessHandler(function(data) {
+            renderInventory(data);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('inventoryContainer').innerHTML = '<p class="loading" style="color: #e53e3e;">Server Error: ' + err.message + '</p>';
+          })
+          .getInventoryData();
+      } catch (e) {
+        document.getElementById('inventoryContainer').innerHTML = '<p class="loading" style="color: #e53e3e;">Initialization Error: ' + e.message + '</p>';
+      }
+    };
+
+    function renderInventory(data) {
+      allInventoryData = data || [];
+      buildCategoryFilters(allInventoryData);
+      displayItems(allInventoryData);
+    }
+
+    function buildCategoryFilters(data) {
+      const categories = ['All', ...new Set(data.map(item => item.category || 'General'))];
+      const container = document.getElementById('categoryFilters');
+      container.innerHTML = categories.map(cat => 
+        `<button class="badge ${cat === 'All' ? 'active' : ''}" onclick="filterByCategory('${cat}', this)">${cat}</button>`
+      ).join('');
+    }
+
+    function getDirectDriveUrl(url) {
+      if (!url) return '';
+      const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      return match ? 'https://lh3.googleusercontent.com/d/' + match[1] : url;
+    }
+
+    function formatCleanDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      let str = String(dateStr);
+      str = str.replace(/GMT.*$/, '').replace(/UTC.*$/, '').trim();
+      return str + ' EST';
+    }
+
+    function displayItems(items) {
+      const container = document.getElementById('inventoryContainer');
+      
+      if (items.length === 0) {
+        container.innerHTML = '<p class="loading">No matching inventory items found.</p>';
+        return;
+      }
+
+      container.className = 'inventory-grid';
+      container.innerHTML = items.map(item => {
+        const rawStatus = (item.status || 'In Storage').trim();
+        const isAvailable = rawStatus.toLowerCase().includes('storage') || rawStatus.toLowerCase().includes('unit') || rawStatus.toLowerCase().includes('site');
+        const isSignedOut = rawStatus.toLowerCase().includes('signed');
+        
+        let statusClass = 'status-storage';
+        if (isSignedOut) statusClass = 'status-out';
+        else if (rawStatus.toLowerCase().includes('missing')) statusClass = 'status-missing';
+
+        const totalQty = item.totalQty !== undefined ? item.totalQty : 1;
+        const signedOutQty = item.signedOutQty !== undefined ? item.signedOutQty : 0;
+
+        let p1 = getDirectDriveUrl(item.photoUrl);
+        let p2 = getDirectDriveUrl(item.photoUrl2);
+
+        let imagesHtml = '';
+        if (p1 || p2) {
+          imagesHtml += '<div class="card-images">';
+          if (p1) imagesHtml += '<img src="' + p1 + '" class="card-image-thumb" alt="Photo 1" onerror="this.style.display=\'none\'">';
+          if (p2) imagesHtml += '<img src="' + p2 + '" class="card-image-thumb" alt="Photo 2" onerror="this.style.display=\'none\'">';
+          imagesHtml += '</div>';
+        }
+
+        return `
+          <div class="card" onclick="openDetailsModal('${item.itemId}')">
+            <div>
+              <div class="card-header">
+                <span class="item-id">${item.itemId || 'N/A'}</span>
+                <span class="status-pill ${statusClass}">${rawStatus}</span>
+              </div>
+              <h3>${item.itemName || 'Unnamed Item'}</h3>
+              ${imagesHtml}
+              <div class="card-meta">
+                <div><strong>Category:</strong> ${item.category || 'General'} (${item.subCategory || 'General'})</div>
+                <div><strong>Location:</strong> ${item.storageLocation || 'Unassigned'}</div>
+                <div><strong>Quantity:</strong> Total: ${totalQty} | Available: ${totalQty - signedOutQty}</div>
+                <div><strong>Condition:</strong> ${item.condition || 'Good'}</div>
+              </div>
+            </div>
+            <button class="btn" onclick="event.stopPropagation(); openModal('${item.itemId}', '${(item.itemName || '').replace(/'/g, "\\'")}')" ${!isAvailable ? 'disabled' : ''}>
+              ${isAvailable ? 'Request Item Checkout' : 'Currently Signed Out'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openDetailsModal(itemId) {
+      const item = allInventoryData.find(i => i.itemId === itemId);
+      if (!item) return;
+      activeSelectedItem = item;
+
+      document.getElementById('detailItemId').innerText = item.itemId || 'N/A';
+      
+      const rawStatus = (item.status || 'In Storage').trim();
+      const isAvailable = rawStatus.toLowerCase().includes('storage') || rawStatus.toLowerCase().includes('unit') || rawStatus.toLowerCase().includes('site');
+      
+      const statusPill = document.getElementById('detailStatus');
+      statusPill.innerText = rawStatus;
+      statusPill.className = 'status-pill ' + (rawStatus.toLowerCase().includes('signed') ? 'status-out' : (rawStatus.toLowerCase().includes('missing') ? 'status-missing' : 'status-storage'));
+
+      document.getElementById('detailItemName').innerText = item.itemName || 'Unnamed Item';
+      document.getElementById('detailCategory').innerText = item.category || 'General';
+      document.getElementById('detailSubCategory').innerText = item.subCategory || 'General';
+      document.getElementById('detailClassification').innerText = item.classification || 'None';
+      document.getElementById('detailLocation').innerText = item.storageLocation || 'Unassigned';
+      
+      const totalQty = item.totalQty !== undefined ? item.totalQty : 1;
+      const signedOutQty = item.signedOutQty !== undefined ? item.signedOutQty : 0;
+      document.getElementById('detailQuantity').innerText = `Total: ${totalQty} | Available: ${totalQty - signedOutQty}`;
+      document.getElementById('detailCondition').innerText = item.condition || 'Good';
+      document.getElementById('detailAccounted').innerText = item.accountedFor || 'Yes';
+      document.getElementById('detailNotes').innerText = item.notes || 'No additional notes recorded for this item.';
+
+      const signOutContainer = document.getElementById('detailSignOutContainer');
+      if (!isAvailable && (item.signedOutTo || item.signOutDate)) {
+        signOutContainer.style.display = 'block';
+        document.getElementById('detailSignedOutTo').innerText = item.signedOutTo || 'Unknown';
+        document.getElementById('detailSignOutDate').innerText = formatCleanDate(item.signOutDate);
+        document.getElementById('detailExpectedReturn').innerText = item.expectedReturn ? formatCleanDate(item.expectedReturn) : 'TBD';
+      } else {
+        signOutContainer.style.display = 'none';
+      }
+
+      let p1 = getDirectDriveUrl(item.photoUrl);
+      let p2 = getDirectDriveUrl(item.photoUrl2);
+      let galleryHtml = '';
+
+      if (p1) galleryHtml += `<img src="${p1}" class="modal-image-large" alt="Primary Photo" onerror="this.style.display='none'">`;
+      if (p2) galleryHtml += `<img src="${p2}" class="modal-image-large" alt="Secondary Photo" onerror="this.style.display='none'">`;
+      if (!p1 && !p2) galleryHtml = '<p style="color: var(--text-muted); font-style: italic; text-align: center; width: 100%;">No photographs available for this item.</p>';
+      
+      document.getElementById('detailGallery').innerHTML = galleryHtml;
+
+      const checkoutBtn = document.getElementById('detailCheckoutBtn');
+      checkoutBtn.disabled = !isAvailable;
+      checkoutBtn.innerText = isAvailable ? 'Request Item Checkout' : 'Currently Signed Out';
+
+      document.getElementById('detailsModal').style.display = 'flex';
+    }
+
+    function closeDetailsModal(event) {
+      document.getElementById('detailsModal').style.display = 'none';
+    }
+
+    function openInfoModal() { document.getElementById('infoModal').style.display = 'flex'; }
+    function closeInfoModal() { document.getElementById('infoModal').style.display = 'none'; }
+
+    function openGlossaryModal() { document.getElementById('glossaryModal').style.display = 'flex'; }
+    function closeGlossaryModal() { document.getElementById('glossaryModal').style.display = 'none'; }
+
+    function openChangelogModal() { document.getElementById('changelogModal').style.display = 'flex'; }
+    function closeChangelogModal() { document.getElementById('changelogModal').style.display = 'none'; }
+
+    function triggerCheckoutFromDetails() {
+      if (!activeSelectedItem) return;
+      closeDetailsModal();
+      openModal(activeSelectedItem.itemId, activeSelectedItem.itemName);
+    }
+
+    function filterByCategory(category, btnElement) {
+      currentCategory = category;
+      document.querySelectorAll('#categoryFilters .badge').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      filterItems();
+    }
+
+    function filterByStatus(status, btnElement) {
+      currentStatusFilter = status;
+      document.querySelectorAll('#statusFilters .badge').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      filterItems();
+    }
+
+    function filterItems() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      
+      const filtered = allInventoryData.filter(item => {
+        const matchesCategory = currentCategory === 'All' || item.category === currentCategory;
+        
+        const rawStatus = (item.status || 'In Storage').toLowerCase();
+        let matchesStatus = true;
+        if (currentStatusFilter === 'In Storage') {
+          matchesStatus = rawStatus.includes('storage') || rawStatus.includes('unit') || rawStatus.includes('site');
+        } else if (currentStatusFilter === 'Signed Out') {
+          matchesStatus = rawStatus.includes('signed');
+        }
+
+        const matchesSearch = Object.values(item).some(val => 
+          String(val).toLowerCase().includes(query)
+        );
+        return matchesCategory && matchesStatus && matchesSearch;
+      });
+
+      displayItems(filtered);
+    }
+
+    function openModal(itemId, itemName) {
+      document.getElementById('modalItemId').value = itemId;
+      document.getElementById('modalTitle').innerText = 'Request: ' + itemName;
+      document.getElementById('requestModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('requestModal').style.display = 'none';
+      document.getElementById('checkoutForm').reset();
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Submitting...';
+
+      const formData = {
+        itemId: document.getElementById('modalItemId').value,
+        scaName: document.getElementById('scaName').value,
+        legalName: document.getElementById('legalName').value,
+        event: document.getElementById('event').value,
+        eventDate: document.getElementById('eventDate').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        readBaronialPolicies: document.getElementById('readBaronialPolicies').checked,
+        readFinancialPolicies: document.getElementById('readFinancialPolicies').checked,
+        quantity: 1
+      };
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          alert(response.message);
+          closeModal();
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Submit Request';
+        })
+        .withFailureHandler(function(error) {
+          alert('Error submitting request: ' + error.message);
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Submit Request';
+        })
+        .submitCheckoutRequest(formData);
+    }
+
+    function toggleChangelogView() {
+      const invView = document.getElementById('inventoryLogView');
+      const techView = document.getElementById('technicalLogView');
+      const toggleBtn = document.getElementById('changelogToggleBtn');
+
+      if (invView.style.display !== 'none') {
+        invView.style.display = 'none';
+        techView.style.display = 'block';
+        toggleBtn.innerText = '⇄ Switch to Inventory Log';
+      } else {
+        invView.style.display = 'block';
+        techView.style.display = 'none';
+        toggleBtn.innerText = '⇄ Switch to Technical Log';
+      }
+    }
+  </script>
+</body>
+</html>
