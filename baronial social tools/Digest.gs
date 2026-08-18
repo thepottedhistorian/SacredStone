@@ -147,27 +147,108 @@ function formatOnlineEvent(title, date, time, loc, desc) {
 /* ============================================================
    SECTION IX: MAIN DIGEST FORMATTER
    ============================================================ */
+/**
+ * Formats calendar events and online activities into structured sections for distribution.
+ *
+ * @param {Array<Object>} baronyEvents - Array of local Baronial event objects.
+ * @param {Array<Object>} kingdomEvents - Array of Kingdom event objects.
+ * @param {Date} start - Start date threshold for the digest period.
+ * @param {Date} end - End date threshold for the digest period.
+ * @param {string} platform - Target platform for formatting output.
+ * @returns {Object} Formatted content strings split by section (header, barony, kingdom, online, footer).
+ */
 function formatForSocialMedia(baronyEvents, kingdomEvents, start, end, platform) {
-  var longDate = start.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
-  var headerBody = "Greetings Sacred Stone!\n\n" + "Check Out Upcoming Events for the Week of " + longDate + "!\n\n" + "📣 Help us keep our community informed!\n" + "Have an event or news to share? If you are hosting an activity or have a milestone to share, please click here to add it to the Baronial Calendar:\n" + CONFIG.get("BARONIAL_EVENT_FORM_URL") + "\n\n\n";
-  var footerNote = "For SCA ONLINE ACTIVITIES (UNOFFICIAL) Events, Please Note:\n* Google Calendar (Known World activities) - https://tinyurl.com/SCA-classesn* Tuesday Master Schedule - https://tinyurl.com/Tuesday-Master-Schedulen* Ads are posted in Artisans of Meridies public Facebook Group\n* All times listed are Central Time Zone / Chicago / USA\n* 20 Breakout rooms are open weekly and are used the same as online collegiums.\n* The space you enter is not the actual class space.\n* Just ask for assistance if you are new to breakout rooms\n* Teachers and students from all kingdoms are welcome.\n* Reach out to Ellen DeLacey on FB to schedule a class.\n* Time zone calculator: https://www.worldtimebuddy.com/";
-  var signature = "For any questions or if you need assistance, please email the Baronial Webminister at " + CONFIG.get("ADMIN_TEST_EMAIL") + "\n\n" + "Yours in Service,\n" + CONFIG.get("OFFICER_SIGNATURE") + "\n" + "Baronial Webminister, Sacred Stone";
-  var sections = { header: headerBody, barony: "=== 🏰 BARONIAL & CANTON EVENTS ===\n\n", kingdom: "=== 👑 KINGDOM EVENTS ===\n\n", online: "=== 🌐 SCA ONLINE ACTIVITIES (UNOFFICIAL) ===\n\n", footer: "\n" + footerNote + "\n\n-------------------------------------------\n\n" + signature };
-  if (baronyEvents.length > 0) { baronyEvents.forEach(function(e) { sections.barony += formatEventEntry(e); }); } else { sections.barony += "No local events scheduled.\n\n"; }
-  if (kingdomEvents.length > 0) { kingdomEvents.forEach(function(ev) { sections.kingdom += formatICSKingdomEvent(ev); }); } else { sections.kingdom += "No kingdom events scheduled.\n\n"; }
-  var onlineSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("OnlineData");
-  var data = onlineSheet.getDataRange().getValues();
-  var hasOnline = false;
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    var title = row[0]; var date = row[1]; var time = row[2]; var loc = row[3]; var desc = row[4]; var keep = row[5];
-    var rowDate = new Date(date);
-    if ((keep === true || keep === "TRUE") && rowDate >= start && rowDate < end) { sections.online += formatOnlineEvent(title, date, time, loc, desc); hasOnline = true; }
+  var longDate = start.toLocaleDateString(undefined, { 
+    month: "long", 
+    day: "numeric", 
+    year: "numeric" 
+  });
+
+  // --- Header Assembly ---
+  var headerBody = "Greetings Sacred Stone!\n\n" +
+    "Check Out Upcoming Events for the Week of " + longDate + "!\n\n" +
+    "📣 Help us keep our community informed!\n" +
+    "Have an event or news to share? If you are hosting an activity or have a milestone to share, please click here to add it to the Baronial Calendar:\n" +
+    CONFIG.get("BARONIAL_EVENT_FORM_URL") + "\n\n\n";
+
+  // --- Footer Note & Signature ---
+  var footerNote = "For SCA ONLINE ACTIVITIES (UNOFFICIAL) Events, Please Note:\n" +
+    "* Google Calendar (Known World activities) - https://tinyurl.com/SCA-classes\n" +
+    "* Tuesday Master Schedule - https://tinyurl.com/Tuesday-Master-Schedule\n" +
+    "* Ads are posted in Artisans of Meridies public Facebook Group\n" +
+    "* All times listed are Central Time Zone / Chicago / USA\n" +
+    "* 20 Breakout rooms are open weekly and are used the same as online collegiums.\n" +
+    "* The space you enter is not the actual class space.\n" +
+    "* Just ask for assistance if you are new to breakout rooms\n" +
+    "* Teachers and students from all kingdoms are welcome.\n" +
+    "* Reach out to Ellen DeLacey on FB to schedule a class.\n" +
+    "* Time zone calculator: https://www.worldtimebuddy.com/";
+
+  var signature = "For any questions or if you need assistance, please email the Baronial Webminister at " +
+    CONFIG.get("ADMIN_TEST_EMAIL") + "\n\n" +
+    "Yours in Service,\n" +
+    CONFIG.get("OFFICER_SIGNATURE");
+
+  // --- Initialize Sections Container ---
+  var sections = {
+    header: headerBody,
+    barony: "=== 🏰 BARONIAL & CANTON EVENTS ===\n\n",
+    kingdom: "=== 👑 KINGDOM EVENTS ===\n\n",
+    online: "=== 🌐 SCA ONLINE ACTIVITIES (UNOFFICIAL) ===\n\n",
+    footer: "\n" + footerNote + "\n\n-------------------------------------------\n\n" + signature
+  };
+
+  // --- Process Baronial Events ---
+  if (baronyEvents && baronyEvents.length > 0) {
+    baronyEvents.forEach(function(e) {
+      sections.barony += formatEventEntry(e);
+    });
+  } else {
+    sections.barony += "No local events scheduled.\n\n";
   }
-  if (!hasOnline) { sections.online += "No curated online activities scheduled.\n\n"; }
+
+  // --- Process Kingdom Events ---
+  if (kingdomEvents && kingdomEvents.length > 0) {
+    kingdomEvents.forEach(function(ev) {
+      sections.kingdom += formatICSKingdomEvent(ev);
+    });
+  } else {
+    sections.kingdom += "No kingdom events scheduled.\n\n";
+  }
+
+  // --- Process Online Activities ---
+  var onlineSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("OnlineData");
+  if (onlineSheet) {
+    var data = onlineSheet.getDataRange().getValues();
+    var hasOnline = false;
+
+    // Skip header row and iterate over rows
+    data.slice(1).forEach(function(row) {
+      var title = row[0];
+      var date = row[1];
+      var time = row[2];
+      var loc = row[3];
+      var desc = row[4];
+      var keep = row[5];
+
+      var rowDate = new Date(date);
+      var isKeep = (keep === true || keep === "TRUE");
+
+      if (isKeep && rowDate >= start && rowDate < end) {
+        sections.online += formatOnlineEvent(title, date, time, loc, desc);
+        hasOnline = true;
+      }
+    });
+
+    if (!hasOnline) {
+      sections.online += "No curated online activities scheduled.\n\n";
+    }
+  } else {
+    sections.online += "No curated online activities scheduled.\n\n";
+  }
+
   return sections;
 }
-
 /* ============================================================
    SECTION X: SUPPORTING UTILITIES
    ============================================================ */
@@ -195,7 +276,7 @@ function launchThisWeekGG() {
   const fullBody = digest.header + digest.barony + digest.kingdom + digest.online + digest.footer;
   
   // Launch the custom modal instead of the alert
-  showDigestModal(fullBody, "Digest for " + start.toLocaleDateString());
+  showDigestModal(fullBody, "Upcoming Events for the Week of " + start.toLocaleDateString());
 }
 
 function launchNextWeekGG() {
