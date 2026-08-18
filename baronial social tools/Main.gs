@@ -56,7 +56,7 @@ function launchDiscordThisWeek() {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
 
-  const baronyCalId = CONFIG.get("BARONIAL_CALENDAR_ID");
+  const baronyCalId = (CONFIG.get("BARONIAL_CALENDAR_ID") || "").toString().trim();
   const baronyCal = CalendarApp.getCalendarById(baronyCalId);
   const baronyEvents = baronyCal.getEvents(start, end);
 
@@ -73,7 +73,7 @@ function launchDiscordNextWeek() {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
 
-  const baronyCalId = CONFIG.get("BARONIAL_CALENDAR_ID");
+  const baronyCalId = (CONFIG.get("BARONIAL_CALENDAR_ID") || "").toString().trim();
   const baronyCal = CalendarApp.getCalendarById(baronyCalId);
   const baronyEvents = baronyCal.getEvents(start, end);
 
@@ -132,58 +132,22 @@ function showDigestModal(content, title) {
    SECTION IV: EMAIL DIGEST LAUNCHERS — ICS ONLY
    ============================================================ */
 
-function launchThisWeekGG() {
-  const start = new Date();
-  const end = new Date(start);
-  end.setDate(end.getDate() + 7);
-
-  const baronyCalId = CONFIG.get("BARONIAL_CALENDAR_ID");
-  const baronyCal = CalendarApp.getCalendarById(baronyCalId);
-  const baronyEvents = baronyCal.getEvents(start, end);
-
-  const kingdomEvents = getICSEvents(start, end);
-
-  const s = formatForSocialMedia(baronyEvents, kingdomEvents, start, end, "GoogleGroup");
-
-  const fullText = s.header + "\n\n" + s.barony + s.kingdom + s.online + s.footer;
-
-  const subject =
-    "Upcoming Events: Week of " +
-    start.toLocaleDateString(undefined, {
-      month: "long",
-      day: "numeric",
-      year: "numeric"
-    });
-
-  showDigestModal(fullText, subject);
+function launchThisWeekGG_old() {
+  // Deprecated wrapper: forward to the unified Digest implementation which aggregates multiple calendars.
+  // The authoritative implementation lives in Digest.gs as launchThisWeekGG().
+  if (typeof launchThisWeekGG === 'function') {
+    return launchThisWeekGG();
+  }
+  return null;
 }
 
-function launchNextWeekGG() {
-  const start = new Date();
-  start.setDate(start.getDate() + 7);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + 7);
-
-  const baronyCalId = CONFIG.get("BARONIAL_CALENDAR_ID");
-  const baronyCal = CalendarApp.getCalendarById(baronyCalId);
-  const baronyEvents = baronyCal.getEvents(start, end);
-
-  const kingdomEvents = getICSEvents(start, end);
-
-  const s = formatForSocialMedia(baronyEvents, kingdomEvents, start, end, "GoogleGroup");
-
-  const fullText = s.header + "\n\n" + s.barony + s.kingdom + s.online + s.footer;
-
-  const subject =
-    "Upcoming Events: Week of " +
-    start.toLocaleDateString(undefined, {
-      month: "long",
-      day: "numeric",
-      year: "numeric"
-    });
-
-  showDigestModal(fullText, subject);
+function launchNextWeekGG_old() {
+  // Deprecated wrapper: forward to the unified Digest implementation which aggregates multiple calendars.
+  // The authoritative implementation lives in Digest.gs as launchNextWeekGG().
+  if (typeof launchNextWeekGG === 'function') {
+    return launchNextWeekGG();
+  }
+  return null;
 }
 
 /* ============================================================
