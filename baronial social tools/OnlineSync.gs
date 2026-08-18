@@ -27,7 +27,7 @@ function fetchOnlineEventsToSheet() {
   }
 
   // SANITIZED: Pulling from Script Properties
-  const calId = CONFIG.get("SCA_ONLINEACTIVITIES_UNOFFICIAL_ID");
+  const calId = (CONFIG.get("SCA_ONLINEACTIVITIES_UNOFFICIAL_ID") || "").toString().trim();
 
   // Step 2: Clear the sheet
   wipeOnlineSheet();
@@ -50,28 +50,29 @@ function fetchOnlineEventsToSheet() {
 
   // Step 4: Process each event
   events.forEach(function(e) {
-    let rawDesc = (e.getDescription() || "")
-      .replace(/<\/?[^>]+(>|$)/g, " ")
-      .trim();
+    // Use the central cleaner to produce consistent, wrapped descriptions
+    var cleaned = (typeof cleanOnlineDescription === 'function') ? cleanOnlineDescription(e.getDescription() || "") : ((e.getDescription()||"").replace(/<\/?[^>]+(>|$)/g, " ").trim());
 
     rows.push([
-      e.getTitle().toUpperCase(),
+      // preserve original title case
+      e.getTitle(),
       e.getStartTime(),
       formatTime(e.getStartTime()) + " – " + formatTime(e.getEndTime()),
       e.getLocation() || "",
-      rawDesc,
+      cleaned,
       true
     ]);
   });
 
-  // Step 5: Write and sort
+// Step 5: Write, sort, and add checkboxes
   if (rows.length > 0) {
     const range = sheet.getRange(2, 1, rows.length, 6);
     range.setValues(rows);
 
+    // Sort by StartTime (col 2) ascending, then by Title (col 1) ascending
     range.sort([
       { column: 2, ascending: true },
-      { column: 3, ascending: true }
+      { column: 1, ascending: true }
     ]);
 
     sheet.getRange(2, 6, rows.length, 1).insertCheckboxes();
